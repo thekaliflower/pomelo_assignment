@@ -1,0 +1,4 @@
+flask
+flask-dance
+authlib
+pyjwt

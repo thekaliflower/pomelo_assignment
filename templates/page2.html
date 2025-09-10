@@ -2,6 +2,12 @@
 <html>
 <head>
     <title> Pomelo Assignment Page 2 </title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+        .verified { background-color: #ffdddd; }
+    </style>
 </head>
 <body>
     <h1>Submit Text</h1>
@@ -17,9 +23,9 @@
             <th>Submitted At</th>
         </tr>
         {% for row in rows %}
-            <tr>
-                <td>{{ row[0] }}</td>
-                <td>{{ row[1] }}</td>
+	    <tr class="{% if row.verified %}verified{% endif %}">
+                <td>{{ row.text }}</td>
+                <td>{{ row.submitted_at }}</td>
             </tr>
         {% endfor %}
     </table>

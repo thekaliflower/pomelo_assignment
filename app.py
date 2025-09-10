@@ -1,9 +1,29 @@
 import os
 import sqlite3
+import jwt
+from jwt import InvalidTokenError
 from datetime import datetime
 from flask import Flask, request, render_template, redirect, url_for, session, render_template_string
 from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
+
+PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
+MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEMU1JFVEO9FkVr0r041GpAWzKvQi1TBYm
+arJj3+aNeC2aK9GT7Hct1OJGWQGbUkNWTeUr+Ui09PjBit+AMYuHgA==
+-----END PUBLIC KEY-----"""
+
+def looks_like_jwt(s: str) -> bool:
+    parts = s.split(".")
+    return len(parts) == 3 and all(parts)
+
+def is_verified_jwt(s: str) -> bool:
+    if not looks_like_jwt(s):
+        return False
+    try:
+        jwt.decode(s, PUBLIC_KEY, algorithms=["ES256"])  # verify sig + header
+        return True
+    except InvalidTokenError:
+        return False
 
 def init_db():
     conn = sqlite3.connect("data.db")
@@ -113,8 +133,13 @@ def create_app():
             conn.commit()
 
         c.execute("SELECT text, submitted_at FROM submissions")
-        rows = c.fetchall()
+        rows_db = c.fetchall()
         conn.close()
+
+        rows = [
+            {"text": text, "submitted_at": ts, "verified": is_verified_jwt(text)}
+            for (text, ts) in rows_db
+        ]
 
         return render_template("page2.html", rows=rows)
 
